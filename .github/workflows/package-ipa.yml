@@ -143,14 +143,13 @@ jobs:
           fi
 
           notes="### Remux iOS Client (Unsigned IPA)
-
-- **Target OS**: iOS 17.0 or later
-- **Architecture**: arm64
-- **Commit**: \`${GITHUB_SHA}\`
-- **Build**: #${GITHUB_RUN_NUMBER}
-
-#### Sideloading
-Install using TrollStore, AltStore, Sideloadly, LiveContainer, or Scarlet."
+          - **Target OS**: iOS 17.0 or later
+          - **Architecture**: arm64
+          - **Commit**: \`${GITHUB_SHA}\`
+          - **Build**: #${GITHUB_RUN_NUMBER}
+          
+          #### Sideloading
+          Install using TrollStore, AltStore, Sideloadly, LiveContainer, or Scarlet."
 
           gh release create "${tag}" Remux.ipa \
             --title "${title}" \
