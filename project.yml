@@ -20,8 +20,8 @@ settings:
       - -lc++
 packages:
   Citadel:
-    url: https://github.com/h3nock/Citadel.git
-    revision: 5089c5e1952a829f4bc02354d74d5ceefd7af254
+    url: https://github.com/Inighty/Citadel.git
+    branch: swift-6.0
 targets:
   Remux:
     type: application
