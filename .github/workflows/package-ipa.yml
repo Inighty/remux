@@ -32,16 +32,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            sudo xcode-select --switch "/Applications/Xcode_16.2.app"
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            sudo xcode-select --switch "/Applications/Xcode_16.1.app"
-          elif [ -d "/Applications/Xcode_16.app" ]; then
-            sudo xcode-select --switch "/Applications/Xcode_16.app"
+          if [ -d "/Applications/Xcode_26.3.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_26.3.app"
+          elif [ -d "/Applications/Xcode_26.2.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_26.2.app"
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_26.app"
+          elif [ -d "/Applications/Xcode_16.4.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.4.app"
           elif [ -d "/Applications/Xcode.app" ]; then
             sudo xcode-select --switch "/Applications/Xcode.app"
           fi
           xcodebuild -version
+          xcodebuild -showsdks
 
       - name: Install XcodeGen
         env:
