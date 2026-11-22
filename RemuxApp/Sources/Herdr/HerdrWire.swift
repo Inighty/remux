@@ -158,7 +158,7 @@ struct HerdrWireReader {
     mutating func string() throws -> String {
         let count = try length()
         defer { offset += count }
-        guard let value = String(validating: bytes[offset..<(offset + count)], as: UTF8.self) else {
+        guard let value = String(bytes: bytes[offset..<(offset + count)], encoding: .utf8) else {
             throw HerdrWireError.invalidUTF8
         }
         return value

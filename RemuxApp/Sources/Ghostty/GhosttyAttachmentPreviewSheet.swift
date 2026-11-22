@@ -27,7 +27,7 @@ struct GhosttyAttachmentPreviewSheet: View {
         NavigationStack {
             stage
                 .navigationBarTitleDisplayMode(.inline)
-                .containerBackground(.clear, for: .navigation)
+                .navigationContainerClearBackground()
         }
         .onAppear {
             ensureSelectedAttachment()
@@ -186,7 +186,7 @@ struct GhosttyAttachmentPreviewSheet: View {
                 .padding(.horizontal, 12)
             }
             .scrollIndicators(.hidden)
-            .defaultScrollAnchor(.center, for: .alignment)
+            .defaultScrollAnchorCenter()
             // It opens on the selected attachment, then follows the selection.
             .onChange(of: selectedAttachmentID, initial: true) { previous, id in
                 guard let id else { return }
@@ -550,5 +550,25 @@ private struct GhosttyAttachmentPreviewThumbnail: View {
             }
         }
         .frame(width: 48, height: 48)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func navigationContainerClearBackground() -> some View {
+        if #available(iOS 18.0, *) {
+            self.containerBackground(.clear, for: .navigation)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func defaultScrollAnchorCenter() -> some View {
+        if #available(iOS 18.0, *) {
+            self.defaultScrollAnchor(.center, for: .alignment)
+        } else {
+            self.defaultScrollAnchor(.center)
+        }
     }
 }

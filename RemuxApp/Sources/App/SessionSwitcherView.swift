@@ -1047,7 +1047,7 @@ private struct AvailableSessionsBrowserView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .containerBackground(.clear, for: .navigation)
+        .navigationContainerClearBackground()
         .navigationTitle("Available Sessions")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
@@ -1076,7 +1076,7 @@ private struct AvailableSessionsBrowserView: View {
             placement: .navigationBarDrawer(displayMode: .always),
             prompt: "Sessions or servers"
         )
-        .searchPresentationToolbarBehavior(.avoidHidingContent)
+        .avoidHidingContentSearchToolbarBehavior()
         .accessibilityIdentifier("terminal.sessions.available-browser-view")
     }
 
@@ -1186,5 +1186,23 @@ extension View {
             .listRowSeparator(.visible)
             .listRowSeparatorTint(TerminalSelectionSheetPalette.stroke)
             .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder
+    func navigationContainerClearBackground() -> some View {
+        if #available(iOS 18.0, *) {
+            self.containerBackground(.clear, for: .navigation)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func avoidHidingContentSearchToolbarBehavior() -> some View {
+        if #available(iOS 17.1, *) {
+            self.searchPresentationToolbarBehavior(.avoidHidingContent)
+        } else {
+            self
+        }
     }
 }

@@ -100,7 +100,7 @@ struct HerdrOwnedZooms: Equatable, Codable, Sendable {
     func tabsToRelease(in snapshot: HerdrSnapshot) -> [String] {
         var owned = self
         owned.reconcile(with: snapshot)
-        let zoomed = snapshot.tabs.lazy.map(\.tabID).filter { owned.panesByTab[$0] != nil }
+        let zoomed: [String] = snapshot.tabs.map(\.tabID).filter { owned.panesByTab[$0] != nil }
         return zoomed.filter { $0 != snapshot.focusedTabID } + zoomed.filter { $0 == snapshot.focusedTabID }
     }
 }

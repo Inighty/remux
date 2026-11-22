@@ -634,20 +634,24 @@ private struct GhosttyKeyboardKeyButton: View {
     @State private var didHold = false
     private let discDiameter = GhosttyKeyboardChromeSizing.keyDiscDiameter
 
+    @ViewBuilder
+    private var armedBackground: some View {
+        if isArmed {
+            Circle()
+                .fill(GhosttyPhoneChromePalette.armedKeyFill)
+                .frame(width: discDiameter, height: discDiameter)
+        }
+    }
+
     var body: some View {
+        let labelColor = isArmed ? GhosttyPhoneChromePalette.armedKeyLabel : GhosttyPhoneChromePalette.chromeForeground
         Text(title)
             .font(.system(size: fontSize, weight: .semibold))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
-            .foregroundStyle(isArmed ? GhosttyPhoneChromePalette.armedKeyLabel : GhosttyPhoneChromePalette.chromeForeground)
+            .foregroundStyle(labelColor)
             .frame(width: width, height: height)
-            .background {
-                if isArmed {
-                    Circle()
-                        .fill(GhosttyPhoneChromePalette.armedKeyFill)
-                        .frame(width: discDiameter, height: discDiameter)
-                }
-            }
+            .background(armedBackground)
             .ghosttyToolbarButtonSurface(
                 isPressed: isPressed,
                 isEnabled: isEnabled,

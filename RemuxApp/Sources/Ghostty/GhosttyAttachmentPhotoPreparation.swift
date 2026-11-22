@@ -394,7 +394,13 @@ enum GhosttyAttachmentPhotoPreparation {
 
     /// The formats whose frames make an animation, an image sequence (HEICS) among them. In other formats, such as
     /// HEIC, further pictures are not frames, and the primary one is the picture.
-    static let animationTypes: [UTType] = [.gif, .png, .webP, .heics]
+    static let animationTypes: [UTType] = {
+        var types: [UTType] = [.gif, .png, .webP]
+        if let heics = UTType("public.heics") {
+            types.append(heics)
+        }
+        return types
+    }()
 
     /// More than one frame in a format whose frames make an animation.
     static func isAnimated(_ source: CGImageSource, type: UTType) -> Bool {

@@ -528,48 +528,56 @@ private struct GhosttyAttachmentMarkupCanvas: UIViewRepresentable {
 
         private static func makeToolPicker(documentSize: CGSize) -> PKToolPicker {
             let widths = toolWidths(documentSize: documentSize)
-            let pen = PKToolPickerInkingItem(
-                type: .pen,
-                color: .systemBlue,
-                width: widths.pen,
-                identifier: "remux.markup.pen"
-            )
-            pen.allowsColorSelection = true
+            if #available(iOS 18.0, *) {
+                let pen = PKToolPickerInkingItem(
+                    type: .pen,
+                    color: .systemBlue,
+                    width: widths.pen,
+                    identifier: "remux.markup.pen"
+                )
+                pen.allowsColorSelection = true
 
-            let marker = PKToolPickerInkingItem(
-                type: .marker,
-                color: .systemYellow,
-                width: widths.marker,
-                identifier: "remux.markup.marker"
-            )
-            marker.allowsColorSelection = true
+                let marker = PKToolPickerInkingItem(
+                    type: .marker,
+                    color: .systemYellow,
+                    width: widths.marker,
+                    identifier: "remux.markup.marker"
+                )
+                marker.allowsColorSelection = true
 
-            let monoline = PKToolPickerInkingItem(
-                type: .monoline,
-                color: .white,
-                width: widths.monoline,
-                identifier: "remux.markup.monoline"
-            )
-            monoline.allowsColorSelection = true
+                let monoline = PKToolPickerInkingItem(
+                    type: .monoline,
+                    color: .white,
+                    width: widths.monoline,
+                    identifier: "remux.markup.monoline"
+                )
+                monoline.allowsColorSelection = true
 
-            let eraser = PKToolPickerEraserItem(type: .bitmap)
-            let lasso = PKToolPickerLassoItem()
-            let ruler = PKToolPickerRulerItem()
-            let picker = PKToolPicker(
-                toolItems: [
-                    pen,
-                    marker,
-                    monoline,
-                    eraser,
-                    lasso,
-                    ruler,
-                ]
-            )
-            picker.selectedToolItem = pen
-            picker.showsDrawingPolicyControls = false
-            picker.colorUserInterfaceStyle = .light
-            picker.stateAutosaveName = "dev.remux.markup.tool-picker"
-            return picker
+                let eraser = PKToolPickerEraserItem(type: .bitmap)
+                let lasso = PKToolPickerLassoItem()
+                let ruler = PKToolPickerRulerItem()
+                let picker = PKToolPicker(
+                    toolItems: [
+                        pen,
+                        marker,
+                        monoline,
+                        eraser,
+                        lasso,
+                        ruler,
+                    ]
+                )
+                picker.selectedToolItem = pen
+                picker.showsDrawingPolicyControls = false
+                picker.colorUserInterfaceStyle = .light
+                picker.stateAutosaveName = "dev.remux.markup.tool-picker"
+                return picker
+            } else {
+                let picker = PKToolPicker()
+                picker.selectedTool = PKInkingTool(.pen, color: .systemBlue, width: widths.pen)
+                picker.colorUserInterfaceStyle = .light
+                picker.stateAutosaveName = "dev.remux.markup.tool-picker"
+                return picker
+            }
         }
 
         private static func toolWidths(documentSize: CGSize) -> (pen: CGFloat, marker: CGFloat, monoline: CGFloat) {
