@@ -33,7 +33,7 @@ Remux connects to your servers over SSH and attaches to the tmux and herdr sessi
 
 ## Requirements
 
-- An iPhone with iOS 18 or later
+- An iPhone with iOS 17 or later
 - A server you can reach over SSH, with tmux 3.1 or later, or herdr 0.9.3 or later
 
 ## Install

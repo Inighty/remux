@@ -1,0 +1,161 @@
+name: Build and Release Unsigned IPA
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "Create GitHub Release with IPA"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-ipa:
+    name: Build Unsigned IPA
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out Remux
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.2.app"
+          elif [ -d "/Applications/Xcode_16.1.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.1.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.app"
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode.app"
+          fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        env:
+          XCODEGEN_VERSION: 2.46.0
+          XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip_path="${RUNNER_TEMP}/xcodegen.zip"
+          curl --fail --location --silent --show-error --output "${zip_path}" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+
+          actual_sha256="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
+          if [[ "${actual_sha256}" != "${XCODEGEN_SHA256}" ]]; then
+            printf 'Checksum mismatch for XcodeGen %s.\n' "${XCODEGEN_VERSION}" >&2
+            exit 1
+          fi
+
+          ditto -x -k "${zip_path}" "${RUNNER_TEMP}"
+          printf '%s\n' "${RUNNER_TEMP}/xcodegen/bin" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/xcodegen/bin/xcodegen" --version
+
+      - name: Fetch GhosttyKit
+        shell: bash
+        run: scripts/fetch_ghosttykit.sh
+
+      - name: Verify GhosttyKit
+        shell: bash
+        run: scripts/fetch_ghosttykit.sh --verify
+
+      - name: Generate Xcode Project
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodegen generate
+
+      - name: Restore Swift packages cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/SourcePackages
+          key: swift-packages-${{ runner.os }}-${{ hashFiles('Remux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: swift-packages-${{ runner.os }}-
+
+      - name: Build Remux App (Unsigned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild clean build \
+            -project Remux.xcodeproj \
+            -scheme Remux \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            -clonedSourcePackagesDirPath "${RUNNER_TEMP}/SourcePackages" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO
+
+      - name: Package Unsigned IPA
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_dir="$(find build/DerivedData/Build/Products/Release-iphoneos -maxdepth 1 -name "Remux.app" -type d | head -n 1)"
+          if [[ -z "${app_dir}" || ! -d "${app_dir}" ]]; then
+            echo "Error: Remux.app was not found in Release-iphoneos!" >&2
+            find build/DerivedData/Build/Products -type d -name "*.app" || true
+            exit 1
+          fi
+          echo "Found app bundle at: ${app_dir}"
+          mkdir -p Payload
+          cp -R "${app_dir}" Payload/
+          zip -r -q Remux.ipa Payload
+          rm -rf Payload
+          echo "Successfully packaged Remux.ipa (size: $(du -h Remux.ipa | cut -f1))"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Remux-unsigned-ipa
+          path: Remux.ipa
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' || github.event.inputs.create_release != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v0.1.0-build.${GITHUB_RUN_NUMBER}"
+          title="Remux v0.1.0 (Build ${GITHUB_RUN_NUMBER}) - iOS 17.0+"
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            tag="${GITHUB_REF_NAME}"
+            title="Remux ${tag} - iOS 17.0+"
+          fi
+
+          notes="### Remux iOS Client (Unsigned IPA)
+
+- **Target OS**: iOS 17.0 or later
+- **Architecture**: arm64
+- **Commit**: \`${GITHUB_SHA}\`
+- **Build**: #${GITHUB_RUN_NUMBER}
+
+#### Sideloading
+Install using TrollStore, AltStore, Sideloadly, LiveContainer, or Scarlet."
+
+          gh release create "${tag}" Remux.ipa \
+            --title "${title}" \
+            --notes "${notes}" \
+            --target "${GITHUB_SHA}" || {
+              echo "Release may already exist, uploading asset to existing release..."
+              gh release upload "${tag}" Remux.ipa --clobber
+            }

@@ -92,7 +92,7 @@ jobs:
     name: App
     needs: changes
     if: needs.changes.outputs.app == 'true' && !github.event.pull_request.draft
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 25
 
     steps:
@@ -104,8 +104,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -d "${XCODE_DEVELOPER_DIR}"
-          sudo xcode-select --switch "${XCODE_DEVELOPER_DIR}"
+          if [ -d "${XCODE_DEVELOPER_DIR:-}" ]; then
+            sudo xcode-select --switch "${XCODE_DEVELOPER_DIR}"
+          elif [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.2.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode_16.app"
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select --switch "/Applications/Xcode.app"
+          fi
           xcodebuild -version
           printf 'build=%s\n' "$(xcodebuild -version | awk '/Build version/ {print $3}')" >> "${GITHUB_OUTPUT}"
 
@@ -191,7 +198,8 @@ jobs:
           set -euo pipefail
           runtime_id="$(xcrun simctl list runtimes --json | jq -r '[.runtimes[] | select(.isAvailable == true and .platform == "iOS")] | sort_by(.version | split(".") | map(tonumber)) | last.identifier')"
           test -n "${runtime_id}"
-          udid="$(xcrun simctl create "Remux CI ${GITHUB_RUN_ID}" com.apple.CoreSimulator.SimDeviceType.iPhone-17e "${runtime_id}")"
+          device_type="$(xcrun simctl list devicetypes --json | jq -r '[.devicetypes[] | select(.name | contains("iPhone"))] | last.identifier')"
+          udid="$(xcrun simctl create "Remux CI ${GITHUB_RUN_ID}" "${device_type}" "${runtime_id}")"
           printf 'udid=%s\n' "${udid}" >> "${GITHUB_OUTPUT}"
           xcrun simctl boot "${udid}"
 

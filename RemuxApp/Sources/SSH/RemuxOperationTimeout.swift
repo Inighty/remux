@@ -1,6 +1,5 @@
 import Foundation
 import NIOCore
-import Synchronization
 
 /// Runs an operation against a deadline. At the deadline the caller's `onTimeout` runs, then the call fails with
 /// `timeoutError`; an operation that still succeeds afterwards is handed to `cleanupLateSuccess`, so a late
@@ -59,15 +58,24 @@ enum RemuxOperationTimeout {
 }
 
 /// When something was last heard (bytes, an answer), for an `extendWhile` that keeps a deadline going while it is.
-final class RemuxLastActivity: Sendable {
-    private let last = Mutex(NIODeadline.now())
+final class RemuxLastActivity: @unchecked Sendable {
+    private let lock = NSLock()
+    private var last: NIODeadline
+
+    init(last: NIODeadline = .now()) {
+        self.last = last
+    }
 
     func record() {
-        last.withLock { $0 = .now() }
+        lock.lock()
+        last = .now()
+        lock.unlock()
     }
 
     func hasRecorded(since start: NIODeadline) -> Bool {
-        last.withLock { $0 > start }
+        lock.lock()
+        defer { lock.unlock() }
+        return last > start
     }
 }
 

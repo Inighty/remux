@@ -194,35 +194,40 @@ private struct TerminalSelectionSheetScrollFades: ViewModifier {
 
     @State private var continues = Edges()
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            .onScrollGeometryChange(for: Edges.self) { geometry in
-                Edges(
-                    top: geometry.contentOffset.y + geometry.contentInsets.top > 1,
-                    bottom: geometry.contentOffset.y + geometry.containerSize.height
-                        - geometry.contentInsets.bottom < geometry.contentSize.height - 1
-                )
-            } action: { _, edges in
-                continues = edges
-            }
-            .mask {
-                VStack(spacing: 0) {
-                    LinearGradient(
-                        colors: [continues.top ? .clear : .black, .black],
-                        startPoint: .top,
-                        endPoint: .bottom
+        if #available(iOS 18.0, *) {
+            content
+                .onScrollGeometryChange(for: Edges.self) { geometry in
+                    Edges(
+                        top: geometry.contentOffset.y + geometry.contentInsets.top > 1,
+                        bottom: geometry.contentOffset.y + geometry.containerSize.height
+                            - geometry.contentInsets.bottom < geometry.contentSize.height - 1
                     )
-                    .frame(height: Self.length)
-                    Color.black
-                    LinearGradient(
-                        colors: [.black, continues.bottom ? .clear : .black],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: Self.length)
+                } action: { _, edges in
+                    continues = edges
                 }
-            }
-            .animation(.easeOut(duration: 0.15), value: continues)
+                .mask {
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            colors: [continues.top ? .clear : .black, .black],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: Self.length)
+                        Color.black
+                        LinearGradient(
+                            colors: [.black, continues.bottom ? .clear : .black],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: Self.length)
+                    }
+                }
+                .animation(.easeOut(duration: 0.15), value: continues)
+        } else {
+            content
+        }
     }
 }
 

@@ -2,7 +2,7 @@ name: Remux
 options:
   bundleIdPrefix: dev.remux
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "17.0"
   postGenCommand: >-
     /usr/bin/perl -0pi -e 's/lastKnownFileType = wrapper\.icon;/lastKnownFileType = folder.iconcomposer.icon;/g' Remux.xcodeproj/project.pbxproj
 settings:
@@ -12,7 +12,7 @@ settings:
     MARKETING_VERSION: 0.1.0
     CURRENT_PROJECT_VERSION: 18
     SWIFT_VERSION: 6.0
-    IPHONEOS_DEPLOYMENT_TARGET: 18.0
+    IPHONEOS_DEPLOYMENT_TARGET: 17.0
     TARGETED_DEVICE_FAMILY: 1
     SUPPORTS_MACCATALYST: NO
     "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
@@ -26,7 +26,7 @@ targets:
   Remux:
     type: application
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "17.0"
     sources:
       - path: RemuxApp/Sources
       - path: RemuxApp/Assets.xcassets
@@ -70,7 +70,7 @@ targets:
   RemuxTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "17.0"
     sources:
       - path: RemuxAppTests
     dependencies:
@@ -86,7 +86,7 @@ targets:
   RemuxUITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "17.0"
     sources:
       - path: RemuxAppUITests
     dependencies:

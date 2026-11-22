@@ -88,17 +88,11 @@ struct GhosttyWindowSelectionSheet: View {
                             .terminalSelectionSheetScrollFades()
                             // The current window stays in view as the sheet takes its height, until
                             // the grid is scrolled by hand.
-                            .onScrollPhaseChange { _, phase in
-                                if phase == .interacting { keepsCurrentWindowInView = false }
-                            }
-                            .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                                geometry.containerSize.height
-                            } action: { _, _ in
-                                guard keepsCurrentWindowInView,
-                                      let current = projection.windows.first(where: \.isSelected)
-                                else { return }
-                                scroll.scrollTo(current.id, anchor: .bottom)
-                            }
+                            .keepCurrentWindowInView(
+                                keepsCurrentWindowInView: $keepsCurrentWindowInView,
+                                selectedWindowID: projection.windows.first(where: \.isSelected)?.id,
+                                scroll: scroll
+                            )
                         }
                     } else {
                         GhosttyWindowRowList(
@@ -1104,6 +1098,38 @@ private extension Optional where Wrapped == GhosttyPanePreviewSession.PreviewSta
             "Preview unavailable"
         case .pending, .none:
             "Preview loading"
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func keepCurrentWindowInView(
+        keepsCurrentWindowInView: Binding<Bool>,
+        selectedWindowID: UUID?,
+        scroll: ScrollViewProxy
+    ) -> some View {
+        if #available(iOS 18.0, *) {
+            self
+                .onScrollPhaseChange { _, phase in
+                    if phase == .interacting { keepsCurrentWindowInView.wrappedValue = false }
+                }
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.containerSize.height
+                } action: { _, _ in
+                    guard keepsCurrentWindowInView.wrappedValue,
+                          let selectedWindowID
+                    else { return }
+                    scroll.scrollTo(selectedWindowID, anchor: .bottom)
+                }
+        } else {
+            self
+                .onAppear {
+                    guard keepsCurrentWindowInView.wrappedValue,
+                          let selectedWindowID
+                    else { return }
+                    scroll.scrollTo(selectedWindowID, anchor: .bottom)
+                }
         }
     }
 }
