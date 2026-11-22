@@ -71,13 +71,11 @@ final class RemuxLibrarySSHPrewarmCoordinator {
                         terminalSettings: terminalSettings
                     )
                     guard target.sshAuth.credential != .none else {
-                        await MainActor.run {
-                            self?.traceSkipped(
-                                candidate: candidate,
-                                reason: RemuxLibrarySSHPrewarmSkipReason
-                                    .interactiveAuthentication.rawValue
-                            )
-                        }
+                        Self.traceSkipped(
+                            candidate: candidate,
+                            reason: RemuxLibrarySSHPrewarmSkipReason
+                                .interactiveAuthentication.rawValue
+                        )
                         continue
                     }
                     await sshConnectionPrewarmer(target)
@@ -91,12 +89,10 @@ final class RemuxLibrarySSHPrewarmCoordinator {
                         onEligibleTarget: onEligibleTarget
                     )
                 } catch is SSHAuthResolverError {
-                    await MainActor.run {
-                        self?.traceSkipped(
-                            candidate: candidate,
-                            reason: RemuxLibrarySSHPrewarmSkipReason.missingAuth.rawValue
-                        )
-                    }
+                    Self.traceSkipped(
+                        candidate: candidate,
+                        reason: RemuxLibrarySSHPrewarmSkipReason.missingAuth.rawValue
+                    )
                 } catch is CancellationError {
                     return
                 } catch {
@@ -161,11 +157,11 @@ final class RemuxLibrarySSHPrewarmCoordinator {
         case .eligible(let eligibleTarget):
             onEligibleTarget(eligibleTarget)
         case .skipped(let reason):
-            traceSkipped(candidate: candidate, reason: reason.rawValue)
+            Self.traceSkipped(candidate: candidate, reason: reason.rawValue)
         }
     }
 
-    private func traceSkipped(
+    private static func traceSkipped(
         candidate: RemuxLibrarySSHPrewarmCandidate,
         reason: String
     ) {
