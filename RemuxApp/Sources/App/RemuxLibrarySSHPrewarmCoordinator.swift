@@ -161,7 +161,7 @@ final class RemuxLibrarySSHPrewarmCoordinator {
         }
     }
 
-    private static func traceSkipped(
+    private nonisolated static func traceSkipped(
         candidate: RemuxLibrarySSHPrewarmCandidate,
         reason: String
     ) {
