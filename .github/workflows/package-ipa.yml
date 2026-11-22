@@ -147,7 +147,11 @@ jobs:
             title="Remux ${tag} - iOS 17.0+"
           fi
 
-          notes="### Remux iOS Client (Unsigned IPA)
+          notes="### 📥 安装包直接下载
+          - 👉 **[点此直接下载 Remux.ipa](https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/Remux.ipa)**
+
+          ---
+          ### Remux iOS Client (Unsigned IPA)
           - **Target OS**: iOS 17.0 or later
           - **Architecture**: arm64
           - **Commit**: \`${GITHUB_SHA}\`
