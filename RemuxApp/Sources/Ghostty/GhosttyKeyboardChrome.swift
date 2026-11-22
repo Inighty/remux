@@ -690,22 +690,11 @@ private struct GhosttyKeyboardKeyButton: View {
             // the finger only after the scroll view's touch delay, and only on lifting for a quick tap, so the click
             // and the pressed look would trail the touch. A recognizer sees the touch at once, and a swipe still
             // turns the page.
-            .gesture(
-                GhosttyKeyPressGesture(maximumDistance: 18) { pressing in
-                    guard isEnabled else {
-                        isPressed = false
-                        return
-                    }
-                    if pressing {
-                        didHold = false
-                        if onLongPress == nil {
-                            Haptic.keyboardPress()
-                        } else {
-                            Haptic.prepareKeyHold()
-                        }
-                    }
-                    isPressed = pressing
-                }
+            .ghosttyKeyPressPressGesture(
+                isEnabled: isEnabled,
+                onLongPress: onLongPress,
+                isPressed: $isPressed,
+                didHold: $didHold
             )
             // The hold runs beside the tap rather than after it: chained after a tap, SwiftUI holds a long press back
             // about a quarter of a second longer than its own duration.
@@ -724,6 +713,7 @@ private struct GhosttyKeyboardKeyButton: View {
 
 /// Reports a finger going down on the view at once, and lifting or travelling past `maximumDistance`. Other gestures,
 /// the page scroll view's swipe among them, recognize alongside it.
+@available(iOS 18.0, *)
 private struct GhosttyKeyPressGesture: UIGestureRecognizerRepresentable {
     let maximumDistance: CGFloat
     let onChange: (Bool) -> Void
@@ -908,5 +898,55 @@ enum GhosttyPhoneChromePalette {
 extension View {
     func ghosttyTerminalChromePresentation(_ colorScheme: ColorScheme) -> some View {
         preferredColorScheme(colorScheme)
+    }
+
+    @ViewBuilder
+    fileprivate func ghosttyKeyPressPressGesture(
+        isEnabled: Bool,
+        onLongPress: (() -> Void)?,
+        isPressed: Binding<Bool>,
+        didHold: Binding<Bool>
+    ) -> some View {
+        if #available(iOS 18.0, *) {
+            self.gesture(
+                GhosttyKeyPressGesture(maximumDistance: 18) { pressing in
+                    guard isEnabled else {
+                        isPressed.wrappedValue = false
+                        return
+                    }
+                    if pressing {
+                        didHold.wrappedValue = false
+                        if onLongPress == nil {
+                            Haptic.keyboardPress()
+                        } else {
+                            Haptic.prepareKeyHold()
+                        }
+                    }
+                    isPressed.wrappedValue = pressing
+                }
+            )
+        } else {
+            self.simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard isEnabled else {
+                            isPressed.wrappedValue = false
+                            return
+                        }
+                        if !isPressed.wrappedValue {
+                            didHold.wrappedValue = false
+                            if onLongPress == nil {
+                                Haptic.keyboardPress()
+                            } else {
+                                Haptic.prepareKeyHold()
+                            }
+                            isPressed.wrappedValue = true
+                        }
+                    }
+                    .onEnded { _ in
+                        isPressed.wrappedValue = false
+                    }
+            )
+        }
     }
 }

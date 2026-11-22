@@ -1189,7 +1189,7 @@ extension View {
     }
 
     @ViewBuilder
-    func navigationContainerClearBackground() -> some View {
+    fileprivate func navigationContainerClearBackground() -> some View {
         if #available(iOS 18.0, *) {
             self.containerBackground(.clear, for: .navigation)
         } else {
@@ -1198,7 +1198,7 @@ extension View {
     }
 
     @ViewBuilder
-    func avoidHidingContentSearchToolbarBehavior() -> some View {
+    fileprivate func avoidHidingContentSearchToolbarBehavior() -> some View {
         if #available(iOS 17.1, *) {
             self.searchPresentationToolbarBehavior(.avoidHidingContent)
         } else {

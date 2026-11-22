@@ -553,7 +553,7 @@ private struct GhosttyAttachmentPreviewThumbnail: View {
     }
 }
 
-private extension View {
+fileprivate extension View {
     @ViewBuilder
     func navigationContainerClearBackground() -> some View {
         if #available(iOS 18.0, *) {
